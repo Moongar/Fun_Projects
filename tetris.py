@@ -21,9 +21,10 @@ L = [[(-1, 0), (0, 0), (1, 0), (1, -1)], [(0, -2), (0, -1), (0, 0), (1, 0)],
      [(-1, 0), (-1, -1), (0, -1), (1, -1)], [(0, -2), (1,-2), (1, -1), (1, 0)]]
 T = [[(-1, 0), (0, 0), (0, -1), (1, 0)], [(0, 0), (0, -1), (1, -1), (0, -2)],
      [(-1, -1), (0, -1), (0, 0), (1, -1)], [(-1, -1), (0, 0), (0, -1), (0, -2)]]
+X = [[(0,0)]] # explosive
 
-shapes = [O, I, S, Z, J, L, T]
-shape_colors = [(0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0), (255, 165, 0), (0, 0, 255), (128, 0, 128)]
+shapes = [O, I, S, Z, J, L, T, X]
+shape_colors = [(0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0), (255, 165, 0), (0, 0, 255), (128, 0, 128), (255, 0, 0)]
 
 
 class Piece:
@@ -132,22 +133,61 @@ def check_move(locked, piece):
     return True
 
 
-def clear_rows(locked):
-    rows = 0
+def build_grid(locked):
     grid = [[(0, 0, 0) for _ in range(10)] for _ in range(20)]
     for k, v in locked.items():
         grid[k[1]][k[0]] = v
-    for y in range(0, len(grid)):
-        if all(grid[y][x] != (0, 0, 0) for x in range(len(grid[y]))):
-            rows += 1
-            for yy in range(1, y)[::-1]:
-                grid[yy+1] = grid[yy]
+    return grid
+
+
+def rebuild_locked(grid):
     locked = {}
     for y in range(0, len(grid)):
         for x in range(len(grid[y])):
             if grid[y][x] != (0, 0, 0):
                 locked[(x, y)] = grid[y][x]
+    return locked
+
+
+def clear_rows(locked):
+    grid = build_grid(locked)
+    rows = 0
+    for y in range(0, len(grid)):
+        if all(grid[y][x] != (0, 0, 0) for x in range(len(grid[y]))):
+            rows += 1
+            for yy in range(1, y)[::-1]:
+                grid[yy+1] = grid[yy]
+    locked = rebuild_locked(grid)
     return locked, rows
+
+
+def explosion(locked, pos):
+    grid = build_grid(locked)
+    for k in pos.keys():
+        grid[k[1]][k[0]] = (0, 0, 0)
+        if k[1] < 19:
+            grid[k[1] + 1][k[0]] = (0, 0, 0)
+            if k[0] == 0:
+                grid[k[1]][k[0] + 1] = (0, 0, 0)
+                grid[k[1] + 1][k[0] + 1] = (0, 0, 0)
+            elif k[0] == 9:
+                grid[k[1]][k[0] - 1] = (0, 0, 0)
+                grid[k[1] + 1][k[0] - 1] = (0, 0, 0)
+            else:
+                grid[k[1]][k[0] + 1] = (0, 0, 0)
+                grid[k[1] + 1][k[0] + 1] = (0, 0, 0)
+                grid[k[1]][k[0] - 1] = (0, 0, 0)
+                grid[k[1] + 1][k[0] - 1] = (0, 0, 0)
+        else:
+            if k[0] == 0:
+                grid[k[1]][k[0] + 1] = (0, 0, 0)
+            elif k[0] == 9:
+                grid[k[1]][k[0] - 1] = (0, 0, 0)
+            else:
+                grid[k[1]][k[0] + 1] = (0, 0, 0)
+                grid[k[1]][k[0] - 1] = (0, 0, 0)
+    locked = rebuild_locked(grid)
+    return locked
 
 
 def main(win):
@@ -176,7 +216,7 @@ def main(win):
             fall_timer = 0
             current_piece.y += 1
             if not check_move(locked_blocks, render_shape(current_piece)):
-                if current_piece.y == 1:
+                if current_piece.y == 1 and current_piece.shape != X:
                     write_bold('YOU LOST!', 80, (255, 255, 255), win, 0)
                     pygame.display.update()
                     pygame.time.delay(1500)
@@ -220,10 +260,13 @@ def main(win):
 
         if change_piece:
             current_pos = render_shape(current_piece)
-            for k, v in current_pos.items():
-                locked_blocks[k] = v
-            locked_blocks, cleared_rows = clear_rows(locked_blocks)
-            score += cleared_rows * 10
+            if current_piece.shape == X:
+                locked_blocks = explosion(locked_blocks, current_pos)
+            else:
+                for k, v in current_pos.items():
+                    locked_blocks[k] = v
+                locked_blocks, cleared_rows = clear_rows(locked_blocks)
+                score += cleared_rows * 10
             current_piece = next_piece
             next_piece = get_piece()
             change_piece = False
