@@ -93,17 +93,14 @@ def draw_window(win, home_button, high_score=10, score=0, level=1):
     # show title
     font = pygame.font.SysFont('comicsans', 60)
     label = font.render('TETRIS', 1, (255, 255, 0))
-    win.blit(label, (top_left_x + play_w / 2 - label.get_width() / 2, 30))
+    win.blit(label, (screen_w // 2 - label.get_width() // 2, (screen_h - play_h) // 4 - label.get_height() // 2))
     # show level
     font = pygame.font.SysFont('comicsans', 40)
     label = font.render('Level: ' + str(level), 1, (255, 255, 255))
-    win.blit(label,
-             (top_left_x + play_w + (screen_w - play_w) / 4 - label.get_width() / 2,
-              top_left_y + play_h / 2 - 200))
-    # show next piece
+    win.blit(label, (screen_w - (screen_w - play_w) / 4 - label.get_width() / 2, screen_h // 2 - 200))
+    # show next piece text
     label = font.render('Next Piece', 1, (255, 255, 255))
-    win.blit(label,
-             (top_left_x + play_w + (screen_w - play_w) / 4 - label.get_width() / 2, top_left_y + play_h / 2 - 100))
+    win.blit(label, (screen_w - (screen_w - play_w) / 4 - label.get_width() / 2, top_left_y + play_h / 2 - 100))
     # show high score
     label = font.render('Best Score', 1, (0, 155, 255))
     win.blit(label, (top_left_x / 2 - label.get_width() / 2, top_left_y + play_h / 2 - 200))
@@ -321,7 +318,7 @@ def main(win):
         # drawings
         draw_window(win, home_button, high_score=get_high_score(), score=score, level=level)
         draw_blocks(win, locked_blocks)
-        draw_blocks(win, render_shape(next_piece), (270, 350))
+        draw_blocks(win, render_shape(next_piece), (270, 300))
         draw_blocks(win, render_shape(current_piece))
         # draw gir lines
         draw_grid_lines(win)
