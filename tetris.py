@@ -190,8 +190,9 @@ def explosion(locked, pos):
 
 
 class Button:
-    def __init__(self, color, x, y, width, height, text):
-        self.color = color
+    def __init__(self, dark_color, active_color, x, y, width, height, text):
+        self.color = {'dark': dark_color, 'active': active_color}
+        self.active = False
         self.x = x
         self.y = y
         self.width = width
@@ -203,9 +204,11 @@ class Button:
         if outline:
             pygame.draw.rect(win, outline, (self.x - self.width // 2 - 2, self.y - self.height // 2 - 2,
                                             self.width + 4, self.height + 4), 0)
-
-        pygame.draw.rect(win, self.color, (self.x - self.width // 2, self.y - self.height // 2,
-                                           self.width, self.height), 0)
+        if self.active:
+            color = self.color['active']
+        else:
+            color = self.color['dark']
+        pygame.draw.rect(win, color, (self.x - self.width // 2, self.y - self.height // 2, self.width, self.height), 0)
 
         font = pygame.font.SysFont('comicsans', 50)
         text = font.render(self.text, 1, (0, 0, 0))
@@ -224,7 +227,8 @@ class Button:
 def main(win):
     current_piece = get_piece()
     next_piece = get_piece()
-    home_button = Button((0, 150, 0), screen_w // 2, screen_h - (screen_h - play_h) // 4, 200, 60, "Main Menu")
+    home_button = Button((0, 150, 0), (0, 255, 0),
+                         screen_w // 2, screen_h - (screen_h - play_h) // 4, 200, 60, "Main Menu")
     clock = pygame.time.Clock()
     locked_blocks = {}
     score = 0
@@ -237,6 +241,7 @@ def main(win):
     run = True
     while run:
         fall_timer += clock.get_rawtime()
+
         level_timer += clock.get_rawtime()
         clock.tick()
 
@@ -276,9 +281,9 @@ def main(win):
 
             if event.type == pygame.MOUSEMOTION:
                 if home_button.hover(mouse_pos):
-                    home_button.color = (0, 255, 0)
+                    home_button.active = True
                 else:
-                    home_button.color = (0, 150, 0)
+                    home_button.active = False
 
         if key_lag > 0:
             key_lag += 1
