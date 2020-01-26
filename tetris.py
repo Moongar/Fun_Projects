@@ -2,14 +2,14 @@ import pygame
 import random
 
 screen_w = 800
-screen_h = 700
+screen_h = 800
 play_w = 300
 play_h = 600
 block_size = 30
 
 # game display
 top_left_x = (screen_w - play_w) // 2
-top_left_y = screen_h - play_h
+top_left_y = (screen_h - play_h) // 2
 
 O = [[(0, 0), (0, -1), (1, 0), (1, -1)]]
 I = [[(1, 0), (1, -1), (1, -2), (1, -3)], [(-1, -1), (0, -1), (1, -1), (2, -1)]]
@@ -88,7 +88,7 @@ def update_high_score(new_score):
             f.write(str(high_score))
 
 
-def draw_window(win, high_score=10, score=0, level=1):
+def draw_window(win, home_button, high_score=10, score=0, level=1):
     win.fill((0, 0, 0))
     # show title
     font = pygame.font.SysFont('comicsans', 60)
@@ -116,6 +116,8 @@ def draw_window(win, high_score=10, score=0, level=1):
     win.blit(label, (top_left_x / 2 - label.get_width() / 2, top_left_y + play_h / 2 - 70))
     # draw red margin
     pygame.draw.rect(win, (255, 0, 50), (top_left_x, top_left_y, play_w, play_h), 6)
+    # draw home button
+    home_button.draw(win, (20, 100, 20))
 
 
 def render_shape(piece):
@@ -165,12 +167,12 @@ def explosion(locked, pos):
     grid = build_grid(locked)
     for k in pos.keys():
         grid[k[1]][k[0]] = (0, 0, 0)
-        if k[1] < 19:
+        if k[1] < play_h / block_size - 1:
             grid[k[1] + 1][k[0]] = (0, 0, 0)
             if k[0] == 0:
                 grid[k[1]][k[0] + 1] = (0, 0, 0)
                 grid[k[1] + 1][k[0] + 1] = (0, 0, 0)
-            elif k[0] == 9:
+            elif k[0] == play_w / block_size - 1:
                 grid[k[1]][k[0] - 1] = (0, 0, 0)
                 grid[k[1] + 1][k[0] - 1] = (0, 0, 0)
             else:
@@ -181,7 +183,7 @@ def explosion(locked, pos):
         else:
             if k[0] == 0:
                 grid[k[1]][k[0] + 1] = (0, 0, 0)
-            elif k[0] == 9:
+            elif k[0] == play_w / block_size - 1:
                 grid[k[1]][k[0] - 1] = (0, 0, 0)
             else:
                 grid[k[1]][k[0] + 1] = (0, 0, 0)
@@ -190,9 +192,42 @@ def explosion(locked, pos):
     return locked
 
 
+class Button:
+    def __init__(self, color, x, y, width, height, text):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self, win, outline=None):
+        # Call this method to draw the button on the screen
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - self.width // 2 - 2, self.y - self.height // 2 - 2,
+                                            self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(win, self.color, (self.x - self.width // 2, self.y - self.height // 2,
+                                           self.width, self.height), 0)
+
+        font = pygame.font.SysFont('comicsans', 50)
+        text = font.render(self.text, 1, (0, 0, 0))
+        win.blit(text, (self.x + (self.width / 2 - self.width // 2 - text.get_width() / 2),
+                        self.y + (self.height / 2 - self.height // 2 - text.get_height() / 2)))
+
+    def hover(self, pos):
+        # Pos is the mouse position or a tuple of (x,y) coordinates
+        if self.x - self.width // 2 < pos[0] < self.x + self.width // 2:
+            if self.y - self.height // 2 < pos[1] < self.y + self.height // 2:
+                return True
+
+        return False
+
+
 def main(win):
     current_piece = get_piece()
     next_piece = get_piece()
+    home_button = Button((0, 150, 0), screen_w // 2, screen_h - (screen_h - play_h) // 4, 200, 60, "Main Menu")
     clock = pygame.time.Clock()
     locked_blocks = {}
     score = 0
@@ -227,14 +262,26 @@ def main(win):
                     current_piece.y -= 1
 
         for event in pygame.event.get():
+            mouse_pos = pygame.mouse.get_pos()
             if event.type == pygame.QUIT:
                 run = False
                 pygame.display.quit()
-            elif event.type == pygame.KEYDOWN:
+
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     current_piece.rotation += 1
                     if not check_move(locked_blocks, render_shape(current_piece)):
                         current_piece.rotation -= 1
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if home_button.hover(mouse_pos):
+                    run = False
+
+            if event.type == pygame.MOUSEMOTION:
+                if home_button.hover(mouse_pos):
+                    home_button.color = (0, 255, 0)
+                else:
+                    home_button.color = (0, 150, 0)
 
         if key_lag > 0:
             key_lag += 1
@@ -272,7 +319,7 @@ def main(win):
             change_piece = False
 
         # drawings
-        draw_window(win, high_score=get_high_score(), score=score, level=level)
+        draw_window(win, home_button, high_score=get_high_score(), score=score, level=level)
         draw_blocks(win, locked_blocks)
         draw_blocks(win, render_shape(next_piece), (270, 350))
         draw_blocks(win, render_shape(current_piece))
