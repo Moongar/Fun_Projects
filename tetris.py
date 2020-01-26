@@ -230,6 +230,7 @@ def main(win):
     home_button = Button((0, 150, 0), (0, 255, 0),
                          screen_w // 2, screen_h - (screen_h - play_h) // 4, 200, 60, "Main Menu")
     explosion_sound = pygame.mixer.Sound("figures/hit.wav")
+    # explosion_sound.set_volume(5)
     clock = pygame.time.Clock()
     locked_blocks = {}
     score = 0
@@ -338,13 +339,13 @@ def main_menu(win):
     pygame.font.init()
     music = pygame.mixer.music.load("figures/music.mp3")
     pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(.3)
     # main(win)
     run = True
     while run:
         win.fill((0, 0, 0))
         write_bold('Welcome To TETRIS!', 80, (0, 255, 0), win, -100)
         write_bold('Press Any Key to Play', 50, (255, 255, 255), win, +150)
-
         draw_blocks(win, render_shape(Piece(0, 0, shapes[2])), (0, 100))
         draw_blocks(win, render_shape(Piece(0, 0, shapes[3])), (200, 100))
         draw_blocks(win, render_shape(Piece(0, 0, shapes[5])), (-70, 300))
