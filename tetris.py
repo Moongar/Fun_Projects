@@ -273,9 +273,12 @@ def main(win):
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    current_piece.rotation += 1
-                    if not check_move(locked_blocks, render_shape(current_piece)):
-                        current_piece.rotation -= 1
+                    if current_piece.shape == X:
+                        change_piece = True
+                    else:
+                        current_piece.rotation += 1
+                        if not check_move(locked_blocks, render_shape(current_piece)):
+                            current_piece.rotation -= 1
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if home_button.hover(mouse_pos):
@@ -334,12 +337,12 @@ def main(win):
 
 
 def main_menu(win):
-    pygame.mixer.init(22100, -16, 2, 64)
+    pygame.mixer.init(22100, -16, 2, 64)  # fix sound play delay
     pygame.init()
     pygame.font.init()
     music = pygame.mixer.music.load("figures/music.mp3")
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(.3)
+    pygame.mixer.music.set_volume(.01)
     # main(win)
     run = True
     while run:
@@ -367,4 +370,5 @@ pygame.display.set_caption('Tetris')
 main_menu(win)  # start game
 
 # TODO: fix the rotation bug
-# TODO: add sound volume control to the main menu
+# TODO: add sound volume control to the main menu or game window
+# TODO: make explosion bigger?
