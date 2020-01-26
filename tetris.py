@@ -229,6 +229,7 @@ def main(win):
     next_piece = get_piece()
     home_button = Button((0, 150, 0), (0, 255, 0),
                          screen_w // 2, screen_h - (screen_h - play_h) // 4, 200, 60, "Main Menu")
+    explosion_sound = pygame.mixer.Sound("figures/hit.wav")
     clock = pygame.time.Clock()
     locked_blocks = {}
     score = 0
@@ -310,6 +311,7 @@ def main(win):
         if change_piece:
             current_pos = render_shape(current_piece)
             if current_piece.shape == X:
+                explosion_sound.play()
                 locked_blocks = explosion(locked_blocks, current_pos)
             else:
                 for k, v in current_pos.items():
@@ -331,8 +333,11 @@ def main(win):
 
 
 def main_menu(win):
+    pygame.mixer.init(22100, -16, 2, 64)
     pygame.init()
     pygame.font.init()
+    music = pygame.mixer.music.load("figures/music.mp3")
+    pygame.mixer.music.play(-1)
     # main(win)
     run = True
     while run:
@@ -359,3 +364,6 @@ win = pygame.display.set_mode((screen_w, screen_h))
 pygame.display.set_caption('Tetris')
 
 main_menu(win)  # start game
+
+# TODO: fix the rotation bug
+# TODO: add sound volume control to the main menu
