@@ -230,7 +230,8 @@ def main(win):
     home_button = Button((0, 150, 0), (0, 255, 0),
                          screen_w // 2, screen_h - (screen_h - play_h) // 4, 200, 60, "Main Menu")
     explosion_sound = pygame.mixer.Sound("figures/hit.wav")
-    # explosion_sound.set_volume(5)
+    clear_row_sound = pygame.mixer.Sound("figures/Sword1.wav")
+    # explosion_sound.set_volume(.99)
     clock = pygame.time.Clock()
     locked_blocks = {}
     score = 0
@@ -321,6 +322,8 @@ def main(win):
                 for k, v in current_pos.items():
                     locked_blocks[k] = v
                 locked_blocks, cleared_rows = clear_rows(locked_blocks)
+                if cleared_rows > 0:
+                    clear_row_sound.play()
                 score += cleared_rows * 10
             current_piece = next_piece
             next_piece = get_piece()
@@ -329,7 +332,7 @@ def main(win):
         # drawings
         draw_window(win, home_button, high_score=get_high_score(), score=score, level=level)
         draw_blocks(win, locked_blocks)
-        draw_blocks(win, render_shape(next_piece), (270, 300))
+        draw_blocks(win, render_shape(next_piece), (270, 320))
         draw_blocks(win, render_shape(current_piece))
         # draw gir lines
         draw_grid_lines(win)
@@ -342,7 +345,7 @@ def main_menu(win):
     pygame.font.init()
     music = pygame.mixer.music.load("figures/music.mp3")
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(.01)
+    pygame.mixer.music.set_volume(.1)
     # main(win)
     run = True
     while run:
