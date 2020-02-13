@@ -88,7 +88,7 @@ def update_high_score(new_score):
             f.write(str(high_score))
 
 
-def draw_window(win, home_button, high_score=10, score=0, level=1):
+def draw_window(win, home_button, vol_button_plus, vol_button_minus, high_score=10, score=0, level=1):
     win.fill((0, 0, 0))
     # show title
     font = pygame.font.SysFont('comicsans', 60)
@@ -115,7 +115,13 @@ def draw_window(win, home_button, high_score=10, score=0, level=1):
     pygame.draw.rect(win, (255, 0, 50), (top_left_x, top_left_y, play_w, play_h), 6)
     # draw home button
     home_button.draw(win, (20, 100, 20))
-
+    # write volume
+    font = pygame.font.SysFont('comicsans', 40)
+    label = font.render('Volume', 1, (255, 255, 255))
+    win.blit(label, (screen_w - label.get_width() -60, screen_h - (screen_h - play_h) // 4 - 15))
+    # draw volume buttons
+    vol_button_plus.draw(win, (20, 100, 20))
+    vol_button_minus.draw(win, (20, 100, 20))
 
 def render_shape(piece):
     grid_pos = {}
@@ -224,11 +230,15 @@ class Button:
         return False
 
 
-def main(win):
+def main(win, vol):
     current_piece = get_piece()
     next_piece = get_piece()
     home_button = Button((0, 150, 0), (0, 255, 0),
                          screen_w // 2, screen_h - (screen_h - play_h) // 4, 200, 60, "Main Menu")
+    vol_button_plus = Button((50, 50, 150), (100, 100, 255),
+                             screen_w -30, screen_h - (screen_h - play_h) // 4 - 15, 30, 30, "+")
+    vol_button_minus = Button((50, 50, 150), (100, 100, 255),
+                              screen_w - 30, screen_h - (screen_h - play_h) // 4 + 15, 30, 30, "-")
     explosion_sound = pygame.mixer.Sound("figures/hit.wav")
     clear_row_sound = pygame.mixer.Sound("figures/Sword1.wav")
     # explosion_sound.set_volume(.99)
@@ -284,12 +294,30 @@ def main(win):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if home_button.hover(mouse_pos):
                     run = False
+                if vol_button_plus.hover(mouse_pos):
+                    vol += .1
+                    if vol > 1:
+                        vol = 1
+                    pygame.mixer.music.set_volume(vol)
+                if vol_button_minus.hover(mouse_pos):
+                    vol -= .1
+                    if vol < 0:
+                        vol = 0
+                    pygame.mixer.music.set_volume(vol)
 
             if event.type == pygame.MOUSEMOTION:
                 if home_button.hover(mouse_pos):
                     home_button.active = True
                 else:
                     home_button.active = False
+                if vol_button_plus.hover(mouse_pos):
+                    vol_button_plus.active = True
+                else:
+                    vol_button_plus.active = False
+                if vol_button_minus.hover(mouse_pos):
+                    vol_button_minus.active = True
+                else:
+                    vol_button_minus.active = False
 
         if key_lag > 0:
             key_lag += 1
@@ -330,7 +358,7 @@ def main(win):
             change_piece = False
 
         # drawings
-        draw_window(win, home_button, high_score=get_high_score(), score=score, level=level)
+        draw_window(win, home_button, vol_button_plus, vol_button_minus, high_score=get_high_score(), score=score, level=level)
         draw_blocks(win, locked_blocks)
         draw_blocks(win, render_shape(next_piece), (270, 320))
         draw_blocks(win, render_shape(current_piece))
@@ -343,9 +371,10 @@ def main_menu(win):
     pygame.mixer.init(22100, -16, 2, 64)  # fix sound play delay
     pygame.init()
     pygame.font.init()
-    music = pygame.mixer.music.load("figures/music.mp3")
+    pygame.mixer.music.load("figures/music.mp3")
+    music_vol = .3
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(.1)
+    pygame.mixer.music.set_volume(music_vol)
     # main(win)
     run = True
     while run:
@@ -362,7 +391,7 @@ def main_menu(win):
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
-                main(win)
+                main(win, music_vol)
 
     pygame.display.quit()
 
@@ -373,5 +402,4 @@ pygame.display.set_caption('Tetris')
 main_menu(win)  # start game
 
 # TODO: fix the rotation bug
-# TODO: add sound volume control to the main menu or game window
 # TODO: make explosion bigger?
